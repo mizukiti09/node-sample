@@ -25,6 +25,10 @@ app.use("/public", express.static(path.join(__dirname, "/public")));
 // Set access log.
 app.use(accesslogger());
 
+// Set middleware
+// POST送信を受け付ける設定
+app.use(express.urlencoded({ extended: true }));
+
 // Dynamic resource rooting.
 app.use("/account", require("./routes/account.js"));
 app.use("/search", require("./routes/search.js"));
