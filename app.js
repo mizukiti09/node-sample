@@ -30,11 +30,6 @@ app.use(accesslogger());
 app.use(cookie());
 // POST送信を受け付ける設定
 app.use(express.urlencoded({ extended: true }));
-app.use((req, res, next) => {
-    console.log(req.cookies.message);
-    res.cookie("message", "Hello World");
-    next();
-})
 
 // Dynamic resource rooting.
 app.use("/account", require("./routes/account.js"));
