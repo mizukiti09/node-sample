@@ -1,4 +1,5 @@
-const PORT = process.env.PORT || 3000;
+const appconfig = require("./config/application.config.js");
+const dbconfig = require("./config/mysql.config.js");
 const path = require("path");
 const logger = require("./lib/log/logger.js");
 const accesslogger = require("./lib/log/accesslogger.js");
@@ -6,13 +7,15 @@ const applicationlogger = require("./lib/log/applicationlogger.js");
 const express = require("express");
 const favicon = require("serve-favicon");
 const cookie = require("cookie-parser");
+const session = require("express-session");
+const MySqlStore = require("express-mysql-session")(session);
 const app = express();
 
 // Express settings
 app.set("view engine", "ejs");
 app.disable("x-powered-by");
 
-// Expose global method to view engine
+// Expose global method to view engine.
 app.use((req, res, next) => {
     res.locals.moment = require("moment");
     res.locals.padding = require("./lib/math/math.js").padding;
@@ -28,7 +31,19 @@ app.use(accesslogger());
 
 // Set middleware
 app.use(cookie());
-// POST送信を受け付ける設定
+app.use(session({
+    store: new MySqlStore({
+        host: dbconfig.HOST,
+        port: dbconfig.PORT,
+        user: dbconfig.USERNAME,
+        password: dbconfig.PASSWORD,
+        database: dbconfig.DATABASE
+    }),
+    secret: appconfig.security.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: true,
+    name: "sid"
+}));
 app.use(express.urlencoded({ extended: true }));
 
 // Dynamic resource rooting.
@@ -37,11 +52,10 @@ app.use("/search", require("./routes/search.js"));
 app.use("/shops", require("./routes/shops.js"));
 app.use("/", require("./routes/index.js"));
 
-
 // Set application log.
 app.use(applicationlogger());
 
 // Execute web application.
-app.listen(PORT, () => {
-    logger.application.info(`Application listening at :${PORT}`);
+app.listen(appconfig.PORT, () => {
+    logger.application.info(`Application listening at :${appconfig.PORT}`);
 });
